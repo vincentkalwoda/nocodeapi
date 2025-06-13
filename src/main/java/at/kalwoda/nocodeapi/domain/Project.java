@@ -1,0 +1,37 @@
+package at.kalwoda.nocodeapi.domain;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+
+import java.util.Date;
+import java.util.List;
+
+@Entity
+@Table(name = "projects")
+public class Project {
+    @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "api_key", nullable = false, unique = true))
+    ApiKey apiKey;
+
+    @Column(name = "name", nullable = false)
+    @NotBlank(message = "Project name must not be blank!")
+    String name;
+
+    @Column(name = "description", nullable = true)
+    String description;
+
+    @Column(name = "prompt_text", nullable = false)
+    @NotBlank(message = "Prompt text must not be blank!")
+    String promptText;
+
+    @Column(name = "created_at", nullable = false)
+    Date createdAt = new Date();
+
+    @ManyToOne
+    @JoinColumn(name = "user_api_key", nullable = false)
+    User user;
+
+    @ElementCollection
+    @CollectionTable(name = "project_fields", joinColumns = @JoinColumn(name = "project_api_key"))
+    List<Field> fields;
+}
