@@ -34,4 +34,10 @@ class UsernameTest {
         String longUsername = "a".repeat(256);
         assertThrows(Username.UsernameException.class, () -> new Username(longUsername));
     }
+
+    @Test
+    void too_short_username_ShouldThrowException() {
+        String shortUsername = "ab";
+        assertThrows(Username.UsernameException.class, () -> new Username(shortUsername));
+    }
 }
