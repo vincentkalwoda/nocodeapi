@@ -3,6 +3,7 @@ package at.kalwoda.nocodeapi;
 import at.kalwoda.nocodeapi.domain.*;
 
 import java.util.Date;
+import java.util.List;
 
 public class FixturesFactory {
     public static Username username1() {
@@ -50,4 +51,25 @@ public class FixturesFactory {
                 .sessionToken("admintoken")
                 .build();
     }
+
+    public static Project project() {
+        return Project.builder()
+                .apiKey(new ApiKey("project-api-key"))
+                .name("Test Project")
+                .description("This is a test project")
+                .promptText("This is a test prompt")
+                .createdAt(new Date())
+                .user(user())
+                .build();
+    }
+
+    public static EntityModel entityModel(Project project) {
+        return EntityModel.builder()
+                .apiKey(new ApiKey("entity-model-api-key"))
+                .name("Test Entity")
+                .project(project)
+                .build();
+    }
+
+
 }

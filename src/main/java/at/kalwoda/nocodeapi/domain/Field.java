@@ -1,36 +1,45 @@
 package at.kalwoda.nocodeapi.domain;
 
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Embeddable
-public record Field(
-        String name,
-        FieldType type,
-        Boolean isRequired
-) {
+@Entity
+@Table(name = "fields")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Field {
 
-    public Field {
-        if(name == null || name.isBlank())
-            throw FieldException.forNullOrBlankName();
-        if(type == null)
-            throw FieldException.forInvalidType();
-        if(isRequired == null)
-            isRequired = false;
-    }
+    @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "api_key", nullable = false, unique = true))
+    ApiKey apiKey;
 
-    static class FieldException extends RuntimeException {
-        private FieldException(String message) {
-            super(message);
-        }
+    @NotBlank
+    @Column(nullable = false)
+    private String name;
 
-        static FieldException forNullOrBlankName() {
-            return new FieldException("Field name must not be null or blank!");
-        }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private FieldType type;
 
-        static FieldException forInvalidType() {
-            return new FieldException("Field type must not be null!");
-        }
-    }
+    @Column(nullable = false)
+    private Boolean isRequired = false;
+
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "relation_target_api_key"))
+    private ApiKey relationTarget;
+
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "relation_type")
+    private RelationshipType relationType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "entity_api_key", nullable = false)
+    private EntityModel entity;
 }

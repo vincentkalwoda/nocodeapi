@@ -1,6 +1,7 @@
 package at.kalwoda.nocodeapi.domain;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -25,12 +26,12 @@ public class User {
 
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "username", nullable = false, unique = true))
-    @NotBlank(message = "Username is required")
+    @NotNull(message = "Username is required")
     Username username;
 
     @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "email", nullable = false, unique = true))
-    @NotBlank(message = "Email is required")
+    @NotNull(message = "Email is required")
     Email email;
 
     @Column(name = "password", nullable = false)
@@ -39,7 +40,6 @@ public class User {
 
     @Column(name = "role", nullable = false, length = 1)
     @NotNull(message = "Role is required")
-    @Enumerated(EnumType.STRING)
     UserRole role = UserRole.USER;
 
     @Column(name = "created_at", nullable = false)

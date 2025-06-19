@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 @Builder
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "projects")
 public class Project {
     @EmbeddedId
@@ -40,7 +40,6 @@ public class Project {
     @JoinColumn(name = "user_api_key", nullable = false)
     User user;
 
-    @ElementCollection
-    @CollectionTable(name = "project_fields", joinColumns = @JoinColumn(name = "project_api_key"))
-    List<Field> fields;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<EntityModel> entities;
 }

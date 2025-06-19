@@ -54,8 +54,19 @@ class GeneratedApiProject <Entity> << (E, #9b59b6) >> {
 User "1" -- "n" GeneratedApiProject : besitzt >
 GeneratedApiProject --> ApiKey : < embedded
 
+' ==== EntityModel Domain ====
+class Entity <Entity> << (E, #9b59b6) >> {
++apiKey: ApiKey
++name: String
+}
+
+GeneratedApiProject "1" -- "n" Entity : enthält >
+Entity "1" -- "n" Field : enthält >
+Entity --> ApiKey : < embedded
+
+
 ' ==== Field Domain ====
-class Field <ValueObject> << (V, #e67e22) embedded >> {
+class Field <Entity > << (E, #9b59b6) >> {
 +apiKey: ApiKey
 +fieldName: String
 +fieldType: FieldType
@@ -70,7 +81,6 @@ FLOAT
 DATE
 }
 
-GeneratedApiProject "1" -- "n" Field : enthält >
 Field --> FieldType : < embedded
 Field --> ApiKey : < embedded
 
