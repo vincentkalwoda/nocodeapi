@@ -10,7 +10,7 @@ public record Username(String value) {
             throw UsernameException.forNullOrBlankValue();
         if (value.length() < 3 || value.length() > 20)
             throw UsernameException.forInvalidLength();
-        if (!value.matches("^[a-zA-Z0-9_]+$"))
+        if (!value.matches("^[a-zA-Z0-9._]+$"))
             throw UsernameException.forInvalidCharacters();
     }
 

@@ -1,6 +1,5 @@
 package at.kalwoda.nocodeapi.persistance.converter;
 
-import at.kalwoda.nocodeapi.domain.FieldType;
 import at.kalwoda.nocodeapi.domain.UserRole;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserRoleConverterTest {
 
-    private UserRoleConverter userRoleConverter = new UserRoleConverter();
+    private final UserRoleConverter userRoleConverter = new UserRoleConverter();
 
     @Test
     void valid_userRole_ShouldConvertToDatabaseColumn() {

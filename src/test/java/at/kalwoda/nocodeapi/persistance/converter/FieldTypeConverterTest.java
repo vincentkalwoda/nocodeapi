@@ -1,6 +1,5 @@
 package at.kalwoda.nocodeapi.persistance.converter;
 
-import at.kalwoda.nocodeapi.domain.Field;
 import at.kalwoda.nocodeapi.domain.FieldType;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FieldTypeConverterTest {
 
-    private FieldTypeConverter fieldTypeConverter = new FieldTypeConverter();
+    private final FieldTypeConverter fieldTypeConverter = new FieldTypeConverter();
 
     @Test
     void valid_fieldType_ShouldConvertToDatabaseColumn() {

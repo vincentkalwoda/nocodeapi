@@ -21,8 +21,6 @@ class ApiKeyConverterTest {
 
     @Test
     void null_ApiKey_ShouldConvertToNull() {
-        ApiKeyConverter converter = new ApiKeyConverter();
-
         String convertedString = converter.convertToDatabaseColumn(null);
 
         assertNull(convertedString);

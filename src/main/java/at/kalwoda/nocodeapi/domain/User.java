@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -57,8 +58,11 @@ public class User {
     @NotNull(message = "Email verification status is required")
     Boolean isEmailVerified = false;
 
-    @Column(name = "session_token", nullable = true)
-    String sessionToken;
+    @Column(name = "refresh_token", nullable = true, columnDefinition = "TEXT")
+    String refreshToken;
+
+    @Column(name = "refresh_token_expires_at", nullable = true)
+    LocalDateTime refreshTokenExpiresAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Project> projects;

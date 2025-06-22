@@ -8,6 +8,7 @@ class NocodeapiApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Not used, but required for the test to run
 	}
 
 }

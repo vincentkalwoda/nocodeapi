@@ -1,6 +1,5 @@
 package at.kalwoda.nocodeapi.persistance.converter;
 
-import at.kalwoda.nocodeapi.domain.FieldType;
 import at.kalwoda.nocodeapi.domain.RelationshipType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

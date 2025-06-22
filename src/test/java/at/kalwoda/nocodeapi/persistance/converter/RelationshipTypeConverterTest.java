@@ -1,13 +1,12 @@
 package at.kalwoda.nocodeapi.persistance.converter;
 
-import at.kalwoda.nocodeapi.domain.FieldType;
 import at.kalwoda.nocodeapi.domain.RelationshipType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RelationshipTypeConverterTest {
-    private RelationshipTypeConverter relationshipTypeConverter = new RelationshipTypeConverter();
+    private final RelationshipTypeConverter relationshipTypeConverter = new RelationshipTypeConverter();
 
     @Test
     void valid_relationshipType_ShouldConvertToDatabaseColumn() {
