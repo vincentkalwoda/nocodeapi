@@ -57,4 +57,16 @@ public class FieldRestController {
         FieldDto createdField = new FieldDto(fieldService.createField(authentication.getName(), entityApiKey, command));
         return ResponseEntity.status(201).body(createdField);
     }
+
+    @PatchMapping("/updateField/{fieldApiKey}")
+    public ResponseEntity<FieldDto> updateField(Authentication authentication, @PathVariable String fieldApiKey, @RequestBody FieldCommands.UpdateFieldCommand command) {
+        FieldDto field = new FieldDto(fieldService.updateField(authentication.getName(), fieldApiKey, command));
+        return ResponseEntity.ok(field);
+    }
+
+    @DeleteMapping("/deleteField/{fieldApiKey}")
+    public ResponseEntity<Void> deleteField(Authentication authentication, @PathVariable String fieldApiKey) {
+        fieldService.deleteField(authentication.getName(), fieldApiKey);
+        return ResponseEntity.noContent().build();
+    }
 }

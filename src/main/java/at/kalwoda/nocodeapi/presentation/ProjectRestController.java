@@ -24,7 +24,6 @@ public class ProjectRestController {
 
     @GetMapping("/getProjects")
     public List<ProjectDto> getProjects(Authentication authentication) {
-        log.info("Fetching all projects");
         return projectService.getAllProjects(authentication.getName())
                 .stream()
                 .map(ProjectDto::new)
@@ -33,7 +32,6 @@ public class ProjectRestController {
 
     @GetMapping("/getProjects/minimal")
     public List<ProjectMinimalDto> getProjectsMinimal(Authentication authentication) {
-        log.info("Fetching all projects");
         return projectService.getAllProjects(authentication.getName())
                 .stream()
                 .map(ProjectMinimalDto::new)
@@ -51,8 +49,20 @@ public class ProjectRestController {
     }
 
     @PostMapping("/createProject")
-    public ResponseEntity<ProjectMinimalDto> createProject(Authentication authentication, @RequestBody CreateProjectCommand command) {
-        var project = projectService.createProject(authentication.getName(), command);
-        return ResponseEntity.ok(new ProjectMinimalDto(project));
+    public ResponseEntity<ProjectDto> createProject(Authentication authentication, @RequestBody CreateProjectCommand command) {
+        ProjectDto project = new ProjectDto(projectService.createProject(authentication.getName(), command));
+        return ResponseEntity.ok(project);
+    }
+
+    @PatchMapping("/updateProject/{apiKey}")
+    public ResponseEntity<ProjectDto> updateProject(Authentication authentication, @PathVariable String apiKey, @RequestBody ProjectCommands.UpdateProjectCommand command) {
+        ProjectDto project = new ProjectDto(projectService.updateProject(authentication.getName(), apiKey, command));
+        return ResponseEntity.ok(project);
+    }
+
+    @DeleteMapping("/deleteProject/{apiKey}")
+    public ResponseEntity<Void> deleteProject(Authentication authentication, @PathVariable String apiKey) {
+        projectService.deleteProject(authentication.getName(), apiKey);
+        return ResponseEntity.noContent().build();
     }
 }

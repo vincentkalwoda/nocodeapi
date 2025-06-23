@@ -59,4 +59,34 @@ public class ProjectService {
 
         return projectRepository.save(project);
     }
+
+    public Project updateProject(String username, String apiKey, @Valid ProjectCommands.UpdateProjectCommand command) {
+        Project project = getProject(username, apiKey);
+
+        checkProjectOwnership(username, apiKey);
+
+        command.name().ifPresent(project::setName);
+        command.description().ifPresent(project::setDescription);
+        command.promptText().ifPresent(project::setPromptText);
+
+        return projectRepository.save(project);
+    }
+
+    public void deleteProject(String username, String apiKey) {
+        Project project = getProject(username, apiKey);
+
+        checkProjectOwnership(username, apiKey);
+
+        projectRepository.delete(project);
+    }
+
+    public void checkProjectOwnership(String username, String apiKey) {
+        User user = userService.checkUser(username);
+        Project project = projectRepository.findByUserAndApiKey(user, new ApiKey(apiKey))
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+
+        if (!project.getUser().getUsername().equals(new Username(username))) {
+            throw new NoSuchElementException("Project not found");
+        }
+    }
 }

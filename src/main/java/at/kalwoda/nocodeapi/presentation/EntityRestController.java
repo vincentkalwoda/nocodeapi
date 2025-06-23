@@ -57,4 +57,17 @@ public class EntityRestController {
         EntityDto entity = new EntityDto(entityService.createEntity(authentication.getName(), projectApiKey, command));
         return ResponseEntity.status(201).body(entity);
     }
+
+    @PatchMapping("/updateEntity/{entityApiKey}")
+    public ResponseEntity<EntityDto> updateEntity(Authentication authentication, @PathVariable String entityApiKey,
+                                                  @RequestBody @Valid EntityCommands.UpdateEntityCommand command) {
+        EntityDto entity = new EntityDto(entityService.updateEntity(authentication.getName(), entityApiKey, command));
+        return ResponseEntity.ok(entity);
+    }
+
+    @DeleteMapping("/deleteEntity/{entityApiKey}")
+    public ResponseEntity<Void> deleteEntity(Authentication authentication, @PathVariable String entityApiKey) {
+        entityService.deleteEntity(authentication.getName(), entityApiKey);
+        return ResponseEntity.noContent().build();
+    }
 }
