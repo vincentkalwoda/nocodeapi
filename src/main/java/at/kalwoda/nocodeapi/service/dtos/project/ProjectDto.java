@@ -6,6 +6,7 @@ import at.kalwoda.nocodeapi.service.dtos.user.UserMinimalDto;
 import java.util.Date;
 
 public record ProjectDto(
+        String apiKey,
         String name,
         String description,
         String promptText,
@@ -14,6 +15,7 @@ public record ProjectDto(
 ) {
     public ProjectDto(Project p) {
         this(
+                p.getApiKey().value(),
                 p.getName(),
                 p.getDescription(),
                 p.getPromptText(),

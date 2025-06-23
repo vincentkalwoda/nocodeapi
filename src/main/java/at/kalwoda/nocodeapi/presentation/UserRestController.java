@@ -22,14 +22,14 @@ import java.util.List;
 public class UserRestController {
     private final UserService userService;
 
-    @GetMapping
+    @GetMapping("/getUser")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDto> getUser(Authentication authentication) {
         log.info("Fetching user details for user: {}", authentication.getName());
         return ResponseEntity.ok(new UserDto(userService.getUser(authentication.getName())));
     }
 
-    @GetMapping("/minimal")
+    @GetMapping("/getUser/minimal")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserMinimalDto> getUserMinimal(Authentication authentication) {
         log.info("Fetching minimal user details for user: {}", authentication.getName());

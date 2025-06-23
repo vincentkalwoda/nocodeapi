@@ -2,8 +2,9 @@ package at.kalwoda.nocodeapi;
 
 import at.kalwoda.nocodeapi.domain.*;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
-import java.util.List;
 
 public class FixturesFactory {
     public static Username username1() {
@@ -33,7 +34,8 @@ public class FixturesFactory {
                 .lastLogin(new Date())
                 .isActive(true)
                 .isEmailVerified(true)
-                .sessionToken("token")
+                .refreshToken("token")
+                .refreshTokenExpiresAt(LocalDateTime.of(LocalDateTime.now().toLocalDate(), LocalTime.of(1, 0, 0, 0)))
                 .build();
     }
 
@@ -48,7 +50,8 @@ public class FixturesFactory {
                 .lastLogin(new Date())
                 .isActive(true)
                 .isEmailVerified(true)
-                .sessionToken("admintoken")
+                .refreshToken("admintoken")
+                .refreshTokenExpiresAt(LocalDateTime.of(LocalDateTime.now().toLocalDate(), LocalTime.of(1, 0, 0, 0)))
                 .build();
     }
 

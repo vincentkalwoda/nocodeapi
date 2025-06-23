@@ -15,9 +15,9 @@ public class OpenAPIConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("HomeAway API")
+                        .title("NoCode API")
                         .version("1.0")
-                        .description("This is the on and only platform for flats renting"))
+                        .description("This is the NoCode API platform"))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth",

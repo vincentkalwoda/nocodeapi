@@ -36,8 +36,8 @@ public class Project {
     @Column(name = "created_at", nullable = false)
     Date createdAt = new Date();
 
-    @ManyToOne
-    @JoinColumn(name = "user_api_key", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_api_key", referencedColumnName = "api_key", nullable = false)
     User user;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
