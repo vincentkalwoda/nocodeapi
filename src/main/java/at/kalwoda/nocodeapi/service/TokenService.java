@@ -3,13 +3,17 @@ package at.kalwoda.nocodeapi.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,4 +60,19 @@ public class TokenService {
     public String generateToken(Authentication authentication) {
         return generateAccessToken(authentication);
     }
+
+    public String getRole(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new NoSuchElementException();
+        }
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            Jwt jwt = jwtAuth.getToken();
+            return jwt.getClaimAsString("scope");
+        }
+
+        throw new NoSuchElementException();
+    }
+
+
 }

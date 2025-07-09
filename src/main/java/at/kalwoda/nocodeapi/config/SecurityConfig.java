@@ -8,7 +8,14 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.flywaydb.core.internal.util.StringUtils;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,11 +38,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.WebUtils;
 
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,8 +68,56 @@ public class SecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.addFilterBefore(new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                    throws ServletException, IOException {
+
+                String path = request.getServletPath();
+                if (path.equals("/api/v1/login") || path.equals("/api/v1/register")) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                Cookie cookie = WebUtils.getCookie(request, "accessToken");
+                if (cookie != null && StringUtils.hasText(cookie.getValue())) {
+                    String bearerToken = "Bearer " + cookie.getValue();
+
+                    HttpServletRequest wrappedRequest = new HttpServletRequestWrapper(request) {
+                        @Override
+                        public String getHeader(String name) {
+                            if ("Authorization".equalsIgnoreCase(name)) {
+                                return bearerToken;
+                            }
+                            return super.getHeader(name);
+                        }
+
+                        @Override
+                        public Enumeration<String> getHeaders(String name) {
+                            if ("Authorization".equalsIgnoreCase(name)) {
+                                return Collections.enumeration(List.of(bearerToken));
+                            }
+                            return super.getHeaders(name);
+                        }
+
+                        @Override
+                        public Enumeration<String> getHeaderNames() {
+                            List<String> names = Collections.list(super.getHeaderNames());
+                            names.add("Authorization");
+                            return Collections.enumeration(names);
+                        }
+                    };
+                    filterChain.doFilter(wrappedRequest, response);
+                } else {
+                    filterChain.doFilter(request, response);
+                }
+            }
+        }, BearerTokenAuthenticationFilter.class);
+
+
         return http.securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/*/login", "/api/*/register").permitAll()
                         .anyRequest().authenticated()
@@ -64,6 +130,19 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOrigin("http://localhost:4200"); // oder "*" nur für dev
+        config.addAllowedMethod("*");
+        config.addAllowedHeader("*");
+        config.setAllowCredentials(true); // falls Cookies oder Auth-Header genutzt werden
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
 
@@ -133,6 +212,10 @@ public class SecurityConfig {
     }
 
 
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
 
 
 }

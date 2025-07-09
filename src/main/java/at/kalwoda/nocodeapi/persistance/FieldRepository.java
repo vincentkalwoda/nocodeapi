@@ -1,7 +1,10 @@
 package at.kalwoda.nocodeapi.persistance;
 
 import at.kalwoda.nocodeapi.domain.ApiKey;
+import at.kalwoda.nocodeapi.domain.EntityModel;
 import at.kalwoda.nocodeapi.domain.Field;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +17,6 @@ public interface FieldRepository extends JpaRepository<Field, ApiKey> {
     Optional<Field> findByName(String name);
 
     List<Field> findAllByEntity_ApiKey(ApiKey entityApiKey);
+
+    Optional<Field> findByNameAndEntity(@NotBlank String name, EntityModel entity);
 }

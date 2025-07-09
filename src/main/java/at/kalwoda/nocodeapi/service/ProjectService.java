@@ -80,7 +80,7 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-    public void checkProjectOwnership(String username, String apiKey) {
+    public Project checkProjectOwnership(String username, String apiKey) {
         User user = userService.checkUser(username);
         Project project = projectRepository.findByUserAndApiKey(user, new ApiKey(apiKey))
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));
@@ -88,5 +88,7 @@ public class ProjectService {
         if (!project.getUser().getUsername().equals(new Username(username))) {
             throw new NoSuchElementException("Project not found");
         }
+
+        return project;
     }
 }

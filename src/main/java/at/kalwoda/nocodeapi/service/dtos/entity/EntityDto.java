@@ -17,10 +17,12 @@ public record EntityDto(
                 entityModel.getApiKey().value(),
                 entityModel.getName(),
                 new ProjectMinimalDto(entityModel.getProject()),
-                entityModel.getFields()
-                        .stream()
-                        .map(FieldMinimalDto::new)
-                        .toList()
+                entityModel.getFields() == null ?
+                        List.of() :
+                        entityModel.getFields()
+                                .stream()
+                                .map(FieldMinimalDto::new)
+                                .toList()
         );
     }
 }

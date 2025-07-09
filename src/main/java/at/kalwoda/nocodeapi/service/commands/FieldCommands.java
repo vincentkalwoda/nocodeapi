@@ -1,7 +1,10 @@
 package at.kalwoda.nocodeapi.service.commands;
 
+import at.kalwoda.nocodeapi.domain.ConstraintDefinition;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class FieldCommands {
@@ -10,18 +13,16 @@ public class FieldCommands {
             String name,
             @NotBlank(message = "Type is required")
             String type,
-            Boolean required,
-            String relationTargetApiKey,
-            String relationType
+            Map<String, Object> constraints
     ) {
     }
 
     public record UpdateFieldCommand(
             Optional<String> name,
             Optional<String> type,
-            Optional<Boolean> required,
             Optional<String> relationTargetApiKey,
-            Optional<String> relationType
+            Optional<String> relationType,
+            Optional<Map<String, Object>> constraints
     ) {
     }
 }

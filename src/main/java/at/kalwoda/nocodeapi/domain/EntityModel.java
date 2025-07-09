@@ -25,7 +25,7 @@ public class EntityModel {
     @Column(nullable = false)
     String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "project_api_key", nullable = false)
     Project project;
 

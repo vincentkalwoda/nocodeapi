@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "fields")
 @Data
@@ -27,18 +30,12 @@ public class Field {
     @Column(nullable = false, length = 10)
     private FieldType type;
 
-    @Column(nullable = false)
-    private Boolean isRequired = false;
+    @ElementCollection
+    @CollectionTable(name = "field_constraints", joinColumns = @JoinColumn(name = "field_api_key"))
+    private List<ConstraintDefinition> constraints = new ArrayList<>();
 
-    @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "relation_target_api_key"))
-    private ApiKey relationTarget;
 
-    @Enumerated(EnumType.ORDINAL)
-    @Column(name = "relation_type")
-    private RelationshipType relationType;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "entity_api_key", nullable = false)
     private EntityModel entity;
 }

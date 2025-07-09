@@ -1,0 +1,1 @@
+ALTER TABLE projects ALTER COLUMN prompt_text TYPE TEXT;

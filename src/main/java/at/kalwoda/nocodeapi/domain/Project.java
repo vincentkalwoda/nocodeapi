@@ -29,14 +29,14 @@ public class Project {
     @Column(name = "description", nullable = true)
     String description;
 
-    @Column(name = "prompt_text", nullable = false)
+    @Column(name = "prompt_text", nullable = false, columnDefinition = "TEXT")
     @NotBlank(message = "Prompt text must not be blank!")
     String promptText;
 
     @Column(name = "created_at", nullable = false)
     Date createdAt = new Date();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_api_key", referencedColumnName = "api_key", nullable = false)
     User user;
 

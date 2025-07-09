@@ -42,6 +42,16 @@ public class EntityService {
         return entity;
     }
 
+    public EntityModel getEntityByName(String username, String projectApiKey, String entityName) {
+        Project project = projectRepository.findByApiKey(new ApiKey(projectApiKey))
+                .orElseThrow(() -> new NoSuchElementException("Project not found"));
+
+        projectService.checkProjectOwnership(username, project.getApiKey().value());
+
+        return entityRepository.findByProjectAndName(project, entityName)
+                .orElseThrow(() -> new NoSuchElementException("Entity not found"));
+    }
+
     public EntityModel createEntity(String username, String projectApiKey, @Valid CreateEntityCommand command) {
         Project project = projectRepository.findByApiKey(new ApiKey(projectApiKey))
                 .orElseThrow(() -> new NoSuchElementException("Project not found"));

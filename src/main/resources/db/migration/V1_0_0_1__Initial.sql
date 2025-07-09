@@ -20,7 +20,6 @@ create table project_fields
 (
     name            varchar(255),
     type            char(1) not null check (type in ('S','I','F','B','D')),
-    is_required     boolean,
     project_api_key varchar(255) not null
 );
 create table users

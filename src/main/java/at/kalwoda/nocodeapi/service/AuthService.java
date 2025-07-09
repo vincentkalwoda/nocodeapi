@@ -34,37 +34,31 @@ public class AuthService {
     private final TokenService tokenService;
 
     public LoginResult login(@Valid LoginCommand command) {
-        try {
-            log.info("Attempting to authenticate user with username={}", command.username());
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(command.username(), command.password())
+        );
 
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(command.username(), command.password())
-            );
+        String accessToken = tokenService.generateAccessToken(auth);
 
-            log.info("User authenticated successfully: {}", command.username());
+        String refreshToken = tokenService.generateRefreshToken(auth);
 
-            String accessToken = tokenService.generateAccessToken(auth);
+        User user = userRepository.findByUsername(new Username(command.username()))
+                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
-            String refreshToken = tokenService.generateRefreshToken(auth);
+        if (!user.getIsActive())
+            throw new BadCredentialsException("Your account has been deactivated. Please contact support.");
+        if (!user.getIsEmailVerified())
+            throw new BadCredentialsException("Please verify your email address to log in.");
 
-            log.info("Generated tokens for user: {}", command.username());
 
-            User user = userRepository.findByUsername(new Username(command.username()))
-                    .orElseThrow(() -> new IllegalStateException("Authenticated but user not found"));
+        user.setRefreshToken(refreshToken);
+        user.setRefreshTokenExpiresAt(LocalDateTime.now().plusMonths(3));
+        user.setLastLogin(new Date());
 
-            log.info("User found in repository: {}", user.getUsername().value());
+        userRepository.save(user);
 
-            user.setRefreshToken(refreshToken);
-            user.setRefreshTokenExpiresAt(LocalDateTime.now().plusMonths(3));
-            user.setLastLogin(new Date());
+        return new LoginResult(accessToken, refreshToken);
 
-            userRepository.save(user);
-
-            return new LoginResult(accessToken, refreshToken);
-
-        } catch (AuthenticationException e) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
     }
 
     public LoginResult refreshToken(String refreshToken) {
@@ -101,7 +95,19 @@ public class AuthService {
     }
 
     public User register(@Valid UserCommands.RegisterCommand command) {
-        log.info("Creating user with command={}", command);
+        userRepository.findByUsername(new Username(command.username()))
+                .ifPresent(user -> {
+                    throw new IllegalStateException("Username already exists");
+                });
+        userRepository.findByEmail(new Email(command.email()))
+                .ifPresent(user -> {
+                    throw new IllegalStateException("Email already exists");
+                });
+
+        if (!command.password().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$")) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
+        }
+
         ApiKey apiKey;
         do {
             apiKey = new ApiKey("u_" + Base58.random(16));
@@ -121,5 +127,9 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         log.info("User created with apiKey={}", savedUser.getApiKey().value());
         return savedUser;
+    }
+
+    public String isLoggedIn(Authentication authentication) {
+        return tokenService.getRole(authentication);
     }
 }
