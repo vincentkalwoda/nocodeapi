@@ -22,7 +22,7 @@ public record ProjectDto(
                 p.getDescription(),
                 p.getCreatedAt(),
                 new UserMinimalDto(p.getUser()),
-                p.getEntities().stream()
+                p.getEntities() == null ? null : p.getEntities().stream()
                         .map(EntityMinimalDto::new)
                         .toList()
         );
