@@ -119,7 +119,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/*/login", "/api/*/register").permitAll()
+                        .requestMatchers("/api/*/login", "/api/*/register", "/api/*/verifyEmail/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
