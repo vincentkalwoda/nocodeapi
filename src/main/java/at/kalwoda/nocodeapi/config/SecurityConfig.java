@@ -74,7 +74,7 @@ public class SecurityConfig {
                     throws ServletException, IOException {
 
                 String path = request.getServletPath();
-                if (path.equals("/api/v1/login") || path.equals("/api/v1/register")) {
+                if (path.equals("/api/v1/login") || path.equals("/api/v1/register") || path.contains("/api/v1/verifyEmail")) {
                     filterChain.doFilter(request, response);
                     return;
                 }
