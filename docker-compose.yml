@@ -1,5 +1,6 @@
 services:
   api:
+    image: api
     build: .
     ports:
       - "8080:8080"
@@ -11,7 +12,7 @@ services:
     depends_on:
       - db
     networks:
-      - default
+      - api-network
       - system_api-network
 
   db:
@@ -25,11 +26,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - default
+      - system_api-network
 
 networks:
   system_api-network:
     external: true
+  api-network:
+    driver: bridge
 
 volumes:
   postgres_data:
