@@ -129,6 +129,18 @@ public class AuthService {
         return savedUser;
     }
 
+    public void verifyEmail(String apiKey) {
+        User user = userRepository.findByApiKey(new ApiKey(apiKey))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid API key"));
+
+        if (user.getIsEmailVerified()) {
+            throw new IllegalStateException("Email already verified");
+        }
+
+        user.setIsEmailVerified(true);
+        userRepository.save(user);
+    }
+
     public String isLoggedIn(Authentication authentication) {
         return tokenService.getRole(authentication);
     }

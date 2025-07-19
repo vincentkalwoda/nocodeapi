@@ -70,6 +70,12 @@ public class AuthRestController {
         return ResponseEntity.status(201).body(new UserDto(createdUser));
     }
 
+    @PostMapping("/verifyEmail/{apiKey}")
+    public ResponseEntity<String> verifyEmail(@PathVariable String apiKey) {
+        authService.verifyEmail(apiKey);
+        return ResponseEntity.ok("Email verified successfully");
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response, Authentication authentication) {
         authService.logout(authentication.getName());
