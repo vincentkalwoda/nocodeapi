@@ -42,18 +42,18 @@ public class AuthRestController {
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", result.accessToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(60L * 60 * 24 * 30) // 1 month
-                .sameSite("Lax")
+                .sameSite("Strict")
                 .build();
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(60L * 60 * 24 * 90)
-                .sameSite("Lax")
+                .sameSite("Strict")
                 .build();
 
         return ResponseEntity.ok()

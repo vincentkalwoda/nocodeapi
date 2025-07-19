@@ -43,6 +43,9 @@ public class RequestService {
     public RequestStatsDto getRequestStats(String username, String projectApiKey) {
         Project project = projectService.checkProjectOwnership(username, projectApiKey);
 
+        if(project.getRequests().isEmpty()) {
+            return new RequestStatsDto(0, 0.0, 0.0, 1.0);
+        }
         return requestRepository.getRequestStats(project.getApiKey());
     }
 
