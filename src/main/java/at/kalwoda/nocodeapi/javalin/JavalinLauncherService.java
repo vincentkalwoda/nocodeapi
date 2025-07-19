@@ -2,6 +2,9 @@ package at.kalwoda.nocodeapi.javalin;
 
 import at.kalwoda.nocodeapi.domain.*;
 import at.kalwoda.nocodeapi.service.ProjectService;
+import at.kalwoda.nocodeapi.service.RequestService;
+import at.kalwoda.nocodeapi.service.commands.RequestCommands;
+import at.kalwoda.nocodeapi.service.commands.RequestCommands.CreateRequestCommand;
 import at.kalwoda.nocodeapi.service.db.DatabaseProvisioningService;
 import at.kalwoda.nocodeapi.service.db.DdlGenerator;
 import io.javalin.Javalin;
@@ -14,6 +17,8 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor_ = @__(@Autowired))
@@ -24,17 +29,18 @@ public class JavalinLauncherService {
     private final ProjectService projectService;
     private final DatabaseProvisioningService dbProvisioningService;
     private final DdlGenerator ddlGenerator;
+    private Javalin app;
+    private final RequestService requestService;
 
     public List<Map<String, Object>> setupApi(String username, String projectApiKey) {
         Project project = projectService.checkProjectOwnership(username, projectApiKey);
 
         String dbName = "project_" + project.getApiKey().value().replace("-", "_");
-        String key = registry.getKeyForProject(username, projectApiKey);
 
         dbProvisioningService.createDatabaseForProject(dbName);
 
         DataSource projectDataSource = dbProvisioningService.createDataSource(dbName);
-        registry.registerDataSource(key, projectDataSource);
+        registry.registerDataSource(projectApiKey, projectDataSource);
 
         ddlGenerator.executeSchema(projectDataSource, project.getEntities());
 
@@ -42,10 +48,10 @@ public class JavalinLauncherService {
             throw new IllegalArgumentException("Project has no entities.");
         }
 
-        Optional<Javalin> existingApp = registry.getApp(key);
+        Optional<Javalin> existingApp = registry.getApp(projectApiKey);
 
         if (existingApp.isPresent()) {
-            int existingPort = registry.getPort(key).orElse(-1);
+            int existingPort = registry.getPort(projectApiKey).orElse(-1);
             return List.of(Map.of(
                     "status", "already running",
                     "port", existingPort,
@@ -54,13 +60,15 @@ public class JavalinLauncherService {
         }
 
         int port = registry.reserveNextPort();
-        Javalin app = Javalin.create(config -> config.plugins.enableCors(cors -> cors.add(it -> it.anyHost())));
+        app = Javalin.create(config -> config.plugins.enableCors(cors -> cors.add(it -> it.anyHost())));
+
+        app.before(ctx -> {
+            ctx.req().setAttribute("startTime", System.currentTimeMillis());
+        });
 
         for (EntityModel entity : project.getEntities()) {
-            entity.getFields().size(); // init Lazy
             String route = "/" + entity.getName().toLowerCase(Locale.ROOT);
 
-            // GET all entities
             app.get(route, ctx -> {
                 String sql = "SELECT * FROM " + entity.getName().toLowerCase();
 
@@ -81,13 +89,42 @@ public class JavalinLauncherService {
                     }
 
                     ctx.json(results);
+
+                    CreateRequestCommand command = CreateRequestCommand.builder()
+                            .path(ctx.req().getRequestURI())
+                            .method(MethodTypes.GET)
+                            .body(ctx.body())
+                            .queryParams(ctx.queryParamMap().toString())
+                            .headers(ctx.headerMap().toString())
+                            .response(results.toString())
+                            .statusCode(ctx.status().getCode())
+                            .responseTime(System.currentTimeMillis() - (long) ctx.req().getAttribute("startTime"))
+                            .userAgent(ctx.req().getHeader("User-Agent"))
+                            .ipAddress(ctx.req().getRemoteAddr())
+                            .build();
+
+                    requestService.createRequest(username, projectApiKey, command);
+
                 } catch (SQLException e) {
                     log.error("DB read failed", e);
                     ctx.status(500).json(Map.of("error", "Failed to read data"));
+                    CreateRequestCommand command = CreateRequestCommand.builder()
+                            .path(ctx.req().getRequestURI())
+                            .method(MethodTypes.GET)
+                            .body(ctx.body())
+                            .queryParams(ctx.queryParamMap().toString())
+                            .headers(ctx.headerMap().toString())
+                            .statusCode(ctx.status().getCode())
+                            .errorMessage(e.getMessage())
+                            .responseTime(System.currentTimeMillis() - (long) ctx.req().getAttribute("startTime"))
+                            .userAgent(ctx.req().getHeader("User-Agent"))
+                            .ipAddress(ctx.req().getRemoteAddr())
+                            .build();
+
+                    requestService.createRequest(username, projectApiKey, command);
                 }
             });
 
-            // POST create entity
             app.post("/" + entity.getName().toLowerCase(), ctx -> {
                 Map<String, Object> json = ctx.bodyAsClass(Map.class);
 
@@ -299,7 +336,7 @@ public class JavalinLauncherService {
 
         try {
             app.start(port);
-            registry.register(key, app, port);
+            registry.register(projectApiKey, app, port);
         } catch (Exception e) {
             throw new RuntimeException("Failed to start Javalin app: " + e.getMessage(), e);
         }
@@ -314,6 +351,66 @@ public class JavalinLauncherService {
         }
 
         return endpoints;
+    }
+
+    private void handleEndpointCreation(String username, String projectApiKey) {
+        Project project = projectService.checkProjectOwnership(username, projectApiKey);
+
+        project.getEndpoints().forEach(endpoint -> {
+            switch (endpoint.getMethod()) {
+                case GET -> {
+                    String route = "/" + endpoint.getRoute();
+
+                    app.get(route, ctx -> {
+                        String rawSql = endpoint.getSql();
+
+                        try (Connection conn = registry.getDataSource(projectApiKey).getConnection()) {
+                            Pattern paramPattern = Pattern.compile(":(\\w+)");
+                            Matcher matcher = paramPattern.matcher(rawSql);
+                            List<String> paramNames = new ArrayList<>();
+                            StringBuilder parsedSql = new StringBuilder();
+
+                            int lastEnd = 0;
+                            while (matcher.find()) {
+                                parsedSql.append(rawSql, lastEnd, matcher.start()).append("?");
+                                paramNames.add(matcher.group(1));
+                                lastEnd = matcher.end();
+                            }
+                            parsedSql.append(rawSql.substring(lastEnd));
+
+                            try (PreparedStatement stmt = conn.prepareStatement(parsedSql.toString())) {
+                                for (int i = 0; i < paramNames.size(); i++) {
+                                    String name = paramNames.get(i);
+                                    stmt.setString(i + 1, ctx.queryParam(name));
+                                }
+
+                                try (ResultSet rs = stmt.executeQuery()) {
+                                    List<Map<String, Object>> results = new ArrayList<>();
+                                    ResultSetMetaData meta = rs.getMetaData();
+                                    int columnCount = meta.getColumnCount();
+
+                                    while (rs.next()) {
+                                        Map<String, Object> row = new HashMap<>();
+                                        for (int i = 1; i <= columnCount; i++) {
+                                            row.put(meta.getColumnName(i), rs.getObject(i));
+                                        }
+                                        results.add(row);
+                                    }
+
+                                    ctx.json(results);
+                                }
+                            }
+
+                        } catch (SQLException e) {
+                            log.error("DB read failed", e);
+                            ctx.status(500).json(Map.of("error", "Failed to read data"));
+                        }
+                    });
+                }
+            }
+        });
+
+
     }
 
     /**
@@ -437,14 +534,14 @@ public class JavalinLauncherService {
         return null;
     }
 
-    public boolean stopApi(String userApiKey, String entityName) {
-        String key = registry.getKeyForProject(userApiKey, entityName);
-        return registry.stop(key);
+    public boolean stopApi(String username, String projectApiKey) {
+        projectService.checkProjectOwnership(username, projectApiKey);
+
+        return registry.stop(projectApiKey);
     }
 
-    public Optional<Integer> getPort(String userApiKey, String entityName) {
-        String key = registry.getKeyForProject(userApiKey, entityName);
-        return registry.getPort(key);
+    public boolean isApiRunning(String projectApiKey) {
+        return registry.getApp(projectApiKey).isPresent() && registry.getPort(projectApiKey).isPresent();
     }
 
     public List<String> listActiveApis() {

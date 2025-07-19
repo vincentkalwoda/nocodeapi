@@ -2,14 +2,17 @@ package at.kalwoda.nocodeapi.service;
 
 import at.kalwoda.nocodeapi.domain.ApiKey;
 import at.kalwoda.nocodeapi.domain.EntityModel;
+import at.kalwoda.nocodeapi.domain.Field;
 import at.kalwoda.nocodeapi.domain.Project;
 import at.kalwoda.nocodeapi.foundation.Base58;
 import at.kalwoda.nocodeapi.persistance.EntityModelRepository;
 import at.kalwoda.nocodeapi.persistance.ProjectRepository;
 import at.kalwoda.nocodeapi.service.commands.EntityCommands;
 import at.kalwoda.nocodeapi.service.commands.EntityCommands.CreateEntityCommand;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +20,8 @@ import javax.swing.text.html.parser.Entity;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Slf4j
+@Transactional
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Service
 public class EntityService {
@@ -87,6 +92,16 @@ public class EntityService {
 
         projectService.checkProjectOwnership(username, entity.getProject().getApiKey().value());
 
-        entityRepository.delete(entity);
+        entityRepository.deleteByApiKey(entity.getApiKey());
+    }
+
+    @Transactional
+    public void deleteAllEntities(String username, String projectApiKey) {
+
+        Project project = projectService.checkProjectOwnership(username, projectApiKey);
+
+        project.getEntities().clear();
+        projectRepository.save(project);
+
     }
 }

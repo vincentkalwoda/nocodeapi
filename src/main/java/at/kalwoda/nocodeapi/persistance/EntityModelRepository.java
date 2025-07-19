@@ -18,4 +18,6 @@ public interface EntityModelRepository extends JpaRepository<EntityModel, ApiKey
     List<EntityModel> findByProjectApiKey(ApiKey projectApiKey);
 
     Optional<EntityModel> findByProjectAndName(Project project, @NotBlank(message = "Entity name is required") String name);
+
+    void deleteByApiKey(ApiKey value);
 }

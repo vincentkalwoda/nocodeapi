@@ -15,11 +15,6 @@ public class ActiveApiRegistry {
     private final Map<String, Integer> portMapping = new ConcurrentHashMap<>();
     private final AtomicInteger portCounter = new AtomicInteger(9000);
 
-    public String getKeyForProject(String userId, String projectApiKey) {
-        return userId + "_" + projectApiKey;
-    }
-
-
     public int reserveNextPort() {
         return portCounter.getAndIncrement();
     }

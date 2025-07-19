@@ -54,7 +54,6 @@ public class ProjectService {
                 .description(command.description())
                 .createdAt(new Date())
                 .user(user)
-                .promptText("Test")
                 .build();
 
         return projectRepository.save(project);
@@ -67,7 +66,6 @@ public class ProjectService {
 
         command.name().ifPresent(project::setName);
         command.description().ifPresent(project::setDescription);
-        command.promptText().ifPresent(project::setPromptText);
 
         return projectRepository.save(project);
     }
@@ -78,6 +76,12 @@ public class ProjectService {
         checkProjectOwnership(username, apiKey);
 
         projectRepository.delete(project);
+    }
+
+    public void clearEntities(String username, String projectApiKey) {
+        Project project = checkProjectOwnership(username, projectApiKey);
+        project.getEntities().clear();
+        projectRepository.save(project);
     }
 
     public Project checkProjectOwnership(String username, String apiKey) {

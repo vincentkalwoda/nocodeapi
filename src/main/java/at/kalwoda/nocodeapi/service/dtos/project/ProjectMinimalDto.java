@@ -8,7 +8,6 @@ public record ProjectMinimalDto(
         String apiKey,
         String name,
         String description,
-        String promptText,
         Date createdAt
 ) {
     public ProjectMinimalDto(Project project) {
@@ -16,7 +15,6 @@ public record ProjectMinimalDto(
                 project.getApiKey().value(),
                 project.getName(),
                 project.getDescription(),
-                project.getPromptText(),
                 project.getCreatedAt()
         );
     }

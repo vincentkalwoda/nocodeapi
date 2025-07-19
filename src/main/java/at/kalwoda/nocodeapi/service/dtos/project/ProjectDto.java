@@ -1,26 +1,30 @@
 package at.kalwoda.nocodeapi.service.dtos.project;
 
 import at.kalwoda.nocodeapi.domain.Project;
+import at.kalwoda.nocodeapi.service.dtos.entity.EntityMinimalDto;
 import at.kalwoda.nocodeapi.service.dtos.user.UserMinimalDto;
 
 import java.util.Date;
+import java.util.List;
 
 public record ProjectDto(
         String apiKey,
         String name,
         String description,
-        String promptText,
         Date createdAt,
-        UserMinimalDto user
+        UserMinimalDto user,
+        List<EntityMinimalDto> entities
 ) {
     public ProjectDto(Project p) {
         this(
                 p.getApiKey().value(),
                 p.getName(),
                 p.getDescription(),
-                p.getPromptText(),
                 p.getCreatedAt(),
-                new UserMinimalDto(p.getUser())
+                new UserMinimalDto(p.getUser()),
+                p.getEntities().stream()
+                        .map(EntityMinimalDto::new)
+                        .toList()
         );
     }
 }

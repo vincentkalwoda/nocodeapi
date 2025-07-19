@@ -44,7 +44,7 @@ public class AuthRestController {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .maxAge(60 * 60)
+                .maxAge(60L * 60 * 24 * 30) // 1 month
                 .sameSite("Strict")
                 .build();
 

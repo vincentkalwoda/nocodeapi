@@ -6,6 +6,7 @@ import at.kalwoda.nocodeapi.persistance.EntityModelRepository;
 import at.kalwoda.nocodeapi.persistance.FieldRepository;
 import at.kalwoda.nocodeapi.service.commands.FieldCommands;
 import at.kalwoda.nocodeapi.service.commands.FieldCommands.CreateFieldCommand;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class FieldService {
     public final FieldRepository fieldRepository;
     public final EntityModelRepository entityRepository;
     public final ProjectService projectService;
+    public final EntityService entityService;
 
     public List<Field> getFields(String username, String entityApiKey) {
         EntityModel entityModel = entityRepository.findByApiKey(new ApiKey(entityApiKey))
@@ -55,7 +57,6 @@ public class FieldService {
             apiKey = new ApiKey("f_" + Base58.random(16));
         } while (fieldRepository.findByApiKey(apiKey).isPresent());
 
-        // Build constraints list
         List<ConstraintDefinition> constraints = buildConstraints(command, entityModel);
 
         Field field = Field.builder()
@@ -72,11 +73,21 @@ public class FieldService {
     private List<ConstraintDefinition> buildConstraints(CreateFieldCommand command, EntityModel entityModel) {
         List<ConstraintDefinition> constraints = new ArrayList<>();
 
-        // Handle all constraints from the constraints map
         if (command.constraints() != null && !command.constraints().isEmpty()) {
             for (Map.Entry<String, Object> entry : command.constraints().entrySet()) {
-                String constraintType = entry.getKey().toUpperCase();
+                String originalKey = entry.getKey();
+                String constraintType = entry.getKey().trim().toUpperCase().replaceAll("\\s+", "");
                 Object constraintValue = entry.getValue();
+
+                log.info("Processing constraint: originalKey='{}', constraintType='{}', value='{}'",
+                        originalKey, constraintType, constraintValue);
+
+                // Handle special case for DEFAULT constraint
+                if ("DEFAULT".equals(constraintType)) {
+                    validateConstraint(command.type(), Constraints.DEFAULT, constraintValue.toString());
+                    constraints.add(new ConstraintDefinition(Constraints.DEFAULT, constraintValue.toString(), null));
+                    continue;
+                }
 
                 try {
                     Constraints constraint = Constraints.valueOf(constraintType);
@@ -87,11 +98,11 @@ public class FieldService {
                         constraints.add(new ConstraintDefinition(constraint, null, fkmd));
                     } else {
                         validateConstraint(command.type(), constraint, constraintValue.toString());
-
                         constraints.add(new ConstraintDefinition(constraint, constraintValue.toString(), null));
                     }
                 } catch (IllegalArgumentException e) {
-                    log.warn("Invalid constraint type: {}", constraintType);
+                    log.error("Invalid constraint type: '{}' (original: '{}'). Available constraints: {}",
+                            constraintType, originalKey, java.util.Arrays.toString(Constraints.values()));
                     throw new IllegalArgumentException("Invalid constraint type: " + constraintType);
                 }
             }
@@ -176,6 +187,13 @@ public class FieldService {
             return; // null default is allowed
         }
 
+        // Check if it's a database function/expression
+        if (isDatabaseFunction(value)) {
+            validateDatabaseFunction(type, value);
+            return;
+        }
+
+        // Validate as literal value
         try {
             switch (type) {
                 case INTEGER -> Integer.parseInt(value);
@@ -186,7 +204,7 @@ public class FieldService {
                     }
                 }
                 case DATE -> {
-                    // Basic date format validation - you might want to use a proper date parser
+                    // Basic date format validation
                     if (!value.matches("\\d{4}-\\d{2}-\\d{2}")) {
                         throw new IllegalArgumentException("Date default value must be in YYYY-MM-DD format");
                     }
@@ -197,6 +215,57 @@ public class FieldService {
             }
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid default value for " + type + " field: " + value);
+        }
+    }
+
+    private boolean isDatabaseFunction(String value) {
+        return value.contains("(") && value.contains(")") ||
+                value.equalsIgnoreCase("SERIAL") ||
+                value.equalsIgnoreCase("BIGSERIAL") ||
+                value.toUpperCase().startsWith("NEXTVAL") ||
+                value.toUpperCase().startsWith("UUID") ||
+                value.toUpperCase().equals("NOW()") ||
+                value.toUpperCase().equals("CURRENT_TIMESTAMP") ||
+                value.toUpperCase().equals("CURRENT_DATE");
+    }
+
+    private void validateDatabaseFunction(FieldType type, String value) {
+        String upperValue = value.toUpperCase();
+
+        switch (type) {
+            case INTEGER -> {
+                if (upperValue.startsWith("NEXTVAL") ||
+                        upperValue.equals("SERIAL") ||
+                        upperValue.equals("BIGSERIAL")) {
+                    return; // Valid for integers
+                }
+                throw new IllegalArgumentException("Database function '" + value + "' is not valid for INTEGER field");
+            }
+            case FLOAT -> {
+                if (upperValue.startsWith("NEXTVAL")) {
+                    return; // Valid for floats
+                }
+                throw new IllegalArgumentException("Database function '" + value + "' is not valid for FLOAT field");
+            }
+            case DATE -> {
+                if (upperValue.equals("NOW()") ||
+                        upperValue.equals("CURRENT_TIMESTAMP") ||
+                        upperValue.equals("CURRENT_DATE")) {
+                    return; // Valid for dates
+                }
+                throw new IllegalArgumentException("Database function '" + value + "' is not valid for DATE field");
+            }
+            case STRING -> {
+                if (upperValue.startsWith("UUID") ||
+                        upperValue.startsWith("RANDOM")) {
+                    return; // Valid for strings
+                }
+                // For strings, we're more permissive with database functions
+                log.warn("Using database function '{}' for STRING field - make sure this is valid in your database", value);
+            }
+            case BOOLEAN -> {
+                throw new IllegalArgumentException("Database functions are not typically valid for BOOLEAN fields");
+            }
         }
     }
 
@@ -218,6 +287,34 @@ public class FieldService {
 
         fieldRepository.delete(field);
     }
+
+    @Transactional
+    public void deleteAllFieldsForEntity(String username, String entityApiKey) {
+        EntityModel entity = entityService.getEntity(username, entityApiKey);
+
+        if (entity.getFields() != null && !entity.getFields().isEmpty()) {
+            log.info("Deleting {} fields for entity: {}", entity.getFields().size(), entity.getName());
+
+            // Get all field API keys before deletion
+            List<ApiKey> fieldApiKeys = entity.getFields().stream()
+                    .map(Field::getApiKey)
+                    .toList();
+
+            // Delete each field individually
+            for (ApiKey fieldApiKey : fieldApiKeys) {
+                try {
+                    fieldRepository.deleteByApiKey(fieldApiKey);
+                    log.debug("Deleted field with API key: {}", fieldApiKey.value());
+                } catch (Exception e) {
+                    log.error("Failed to delete field with API key: {} - Error: {}", fieldApiKey.value(), e.getMessage());
+                }
+            }
+
+            fieldRepository.flush();
+            log.info("Successfully deleted all fields for entity: {}", entity.getName());
+        }
+    }
+
 
     private ForeignKeyMetadata convertToForeignKeyMetadata(Object value) {
         if (value instanceof Map<?, ?> map) {

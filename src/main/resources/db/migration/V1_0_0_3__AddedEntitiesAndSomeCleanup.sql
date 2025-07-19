@@ -11,7 +11,6 @@ CREATE TABLE fields (
     api_key varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
     type varchar(10) NOT NULL CHECK (type IN ('STRING','INTEGER','BOOLEAN','FLOAT','DATE')),
-    is_required boolean NOT NULL,
     relation_type smallint CHECK (relation_type BETWEEN 0 AND 3),
     entity_api_key varchar(255) NOT NULL,
     relation_target_api_key varchar(255),
@@ -24,12 +23,14 @@ ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('U','A'));
 ALTER TABLE entities
     ADD CONSTRAINT FKr9guo6enh830auyxopt973dt8
     FOREIGN KEY (project_api_key)
-    REFERENCES projects(api_key);
+    REFERENCES projects(api_key)
+    ON DELETE CASCADE;
 
 ALTER TABLE fields
     ADD CONSTRAINT FK6h00xton7up1llv45cccwjlc
     FOREIGN KEY (entity_api_key)
-    REFERENCES entities(api_key);
+    REFERENCES entities(api_key)
+    ON DELETE CASCADE;
 
 ALTER TABLE api_access_tokens DROP CONSTRAINT IF EXISTS FKfmk5r3j4kq5q1if7k7irm851b;
 ALTER TABLE api_access_tokens

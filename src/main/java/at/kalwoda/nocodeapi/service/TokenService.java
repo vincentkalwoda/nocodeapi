@@ -32,7 +32,7 @@ public class TokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(30, ChronoUnit.MINUTES)) // Short-lived: 30 minutes
+                .expiresAt(now.plus(30, ChronoUnit.DAYS)) // Short-lived: 30 minutes
                 .subject(authentication.getName())
                 .claim("scope", scope)
                 .claim("type", "access")

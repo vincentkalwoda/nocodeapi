@@ -29,10 +29,6 @@ public class Project {
     @Column(name = "description", nullable = true)
     String description;
 
-    @Column(name = "prompt_text", nullable = false, columnDefinition = "TEXT")
-    @NotBlank(message = "Prompt text must not be blank!")
-    String promptText;
-
     @Column(name = "created_at", nullable = false)
     Date createdAt = new Date();
 
@@ -42,4 +38,14 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     List<EntityModel> entities;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Endpoint> endpoints;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<PromptHistory> promptHistories;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Request> requests;
+
 }

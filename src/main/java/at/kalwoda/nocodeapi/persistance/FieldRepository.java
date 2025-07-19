@@ -19,4 +19,6 @@ public interface FieldRepository extends JpaRepository<Field, ApiKey> {
     List<Field> findAllByEntity_ApiKey(ApiKey entityApiKey);
 
     Optional<Field> findByNameAndEntity(@NotBlank String name, EntityModel entity);
+
+    void deleteByApiKey(ApiKey fieldApiKey);
 }
