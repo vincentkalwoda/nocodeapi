@@ -135,7 +135,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("*"); // oder "*" nur für dev
+        config.addAllowedOriginPattern("*"); // oder "*" nur für dev
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true); // falls Cookies oder Auth-Header genutzt werden
