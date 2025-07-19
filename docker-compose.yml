@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     build: .
@@ -11,6 +10,9 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       - db
+    networks:
+      - default
+      - system_api-network
 
   db:
     image: postgres:16.4-alpine
@@ -22,7 +24,12 @@ services:
       - "35432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
 
+networks:
+  system_api-network:
+    external: true
 
 volumes:
   postgres_data:
