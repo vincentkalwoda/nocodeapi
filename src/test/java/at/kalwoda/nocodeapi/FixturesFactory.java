@@ -60,7 +60,6 @@ public class FixturesFactory {
                 .apiKey(new ApiKey("project-api-key"))
                 .name("Test Project")
                 .description("This is a test project")
-                .promptText("This is a test prompt")
                 .createdAt(new Date())
                 .user(user())
                 .build();
