@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,7 @@ public class OpenAPIConfig {
                         .version("1.0")
                         .description("This is the NoCode API platform"))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+                .addServersItem(new Server().url("https://empleo.at:5443"))
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth",
                                 new SecurityScheme()
