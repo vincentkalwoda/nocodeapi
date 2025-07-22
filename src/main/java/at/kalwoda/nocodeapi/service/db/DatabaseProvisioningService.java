@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 @Service
 public class DatabaseProvisioningService {
 
-    private final String dbAdminUrl = "jdbc:postgresql://localhost:35432/postgres";
+    private final String dbAdminUrl = "jdbc:postgresql://localhost:5432/postgres";
     private final String dbAdminUser = "nocodeapiowner";
     private final String dbAdminPassword = "nocodeapiowner";
 
@@ -39,7 +39,7 @@ public class DatabaseProvisioningService {
 
     public static DataSource createDataSource(String dbName) {
         HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:postgresql://localhost:35432/" + dbName);
+        ds.setJdbcUrl("jdbc:postgresql://localhost:5432/" + dbName);
         ds.setUsername("nocodeapiowner");
         ds.setPassword("nocodeapiowner");
         return ds;
