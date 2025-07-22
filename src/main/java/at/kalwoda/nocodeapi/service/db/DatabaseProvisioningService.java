@@ -14,12 +14,14 @@ import javax.sql.DataSource;
 @Service
 public class DatabaseProvisioningService {
 
-    private final String dbAdminUrl = "jdbc:postgresql://nocodeapidb:5432/nocodeapidb";
-    private final String dbAdminUser = "nocodeapiowner";
-    private final String dbAdminPassword = "nocodeapiowner";
+    private static final String DB_HOST = "nocodeapidb";
+    private static final String DB_PORT = "5432";
+    private static final String DB_USER = "nocodeapiowner";
+    private static final String DB_PASS = "nocodeapiowner";
+
 
     public void createDatabaseForProject(String dbName) {
-        try (Connection conn = DriverManager.getConnection(dbAdminUrl, dbAdminUser, dbAdminPassword);
+        try (Connection conn = DriverManager.getConnection("jdbc:postgresql://" + DB_HOST + ":" + DB_PORT + "/" + dbName, DB_USER, DB_PASS);
              Statement stmt = conn.createStatement()) {
 
             String checkSql = "SELECT 1 FROM pg_database WHERE datname = '" + dbName + "'";
@@ -39,9 +41,9 @@ public class DatabaseProvisioningService {
 
     public static DataSource createDataSource(String dbName) {
         HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:postgresql://localhost:5432/" + dbName);
-        ds.setUsername("nocodeapiowner");
-        ds.setPassword("nocodeapiowner");
+        ds.setJdbcUrl("jdbc:postgresql://" + DB_HOST + ":" + DB_PORT + "/" + dbName);
+        ds.setUsername(DB_USER);
+        ds.setPassword(DB_PASS);
         return ds;
     }
 }
