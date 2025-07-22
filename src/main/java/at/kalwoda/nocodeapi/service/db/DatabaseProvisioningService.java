@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 @Service
 public class DatabaseProvisioningService {
 
-    private final String dbAdminUrl = "jdbc:postgresql://localhost:5432/postgres";
+    private final String dbAdminUrl = "jdbc:postgresql://nocodeapidb:5432/nocodeapidb";
     private final String dbAdminUser = "nocodeapiowner";
     private final String dbAdminPassword = "nocodeapiowner";
 
