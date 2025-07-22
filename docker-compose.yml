@@ -5,6 +5,7 @@ services:
     container_name: nocodeapi
     ports:
       - "8080:8080"
+      - "9000:9000"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://nocodeapidb:5432/nocodeapidb
       - SPRING_DATASOURCE_USERNAME=nocodeapiowner
