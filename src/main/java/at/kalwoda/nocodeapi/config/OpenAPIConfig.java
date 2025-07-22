@@ -20,7 +20,7 @@ public class OpenAPIConfig {
                         .version("1.0")
                         .description("This is the NoCode API platform"))
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
-                .addServersItem(new Server().url("https://empleo.at:5443/novaapi"))
+                .addServersItem(new Server().url("https://empleo.at:5443"))
                 .components(new Components()
                         .addSecuritySchemes("BearerAuth",
                                 new SecurityScheme()
