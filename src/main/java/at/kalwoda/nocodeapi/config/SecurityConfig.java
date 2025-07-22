@@ -74,7 +74,7 @@ public class SecurityConfig {
                     throws ServletException, IOException {
 
                 String path = request.getServletPath();
-                if (path.equals("/api/v1/login") || path.equals("/api/v1/register") || path.contains("/api/v1/verifyEmail")) {
+                if (path.equals("/novaapi/v1/login") || path.equals("/novaapi/v1/register") || path.contains("/novaapi/v1/verifyEmail")) {
                     filterChain.doFilter(request, response);
                     return;
                 }
@@ -115,11 +115,11 @@ public class SecurityConfig {
         }, BearerTokenAuthenticationFilter.class);
 
 
-        return http.securityMatcher("/api/**")
+        return http.securityMatcher("/novaapi/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/*/login", "/api/*/register", "/api/*/verifyEmail/*").permitAll()
+                        .requestMatchers("/novaapi/*/login", "/novaapi/*/register", "/novaapi/*/verifyEmail/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
