@@ -115,11 +115,11 @@ public class SecurityConfig {
         }, BearerTokenAuthenticationFilter.class);
 
 
-        return http.securityMatcher("/novaapi/**")
+        return http.securityMatcher("/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/novaapi/*/login", "/novaapi/*/register", "/novaapi/*/verifyEmail/*").permitAll()
+                        .requestMatchers("/*/login", "/*/register", "/*/verifyEmail/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -135,7 +135,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://empleo.at"));  // ✅ not "*"
+        config.addAllowedOrigin("*");
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);  // ✅ required for cookies
