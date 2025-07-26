@@ -63,7 +63,7 @@ public class TokenService {
 
     public String getRole(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new NoSuchElementException();
+            throw new NoSuchElementException("Authentication is null or not authenticated");
         }
 
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
