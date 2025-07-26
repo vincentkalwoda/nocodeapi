@@ -119,7 +119,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/*/login", "/*/register", "/*/verifyEmail/*").permitAll()
+                        .requestMatchers("/novaapi/*/login", "/novaapi/*/register", "/novaapi/*/verifyEmail/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
