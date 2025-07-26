@@ -45,7 +45,7 @@ public class AuthRestController {
                 .secure(true)
                 .path("/")
                 .maxAge(60L * 60 * 24 * 30) // 1 month
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", result.refreshToken())
@@ -53,7 +53,7 @@ public class AuthRestController {
                 .secure(true)
                 .path("/")
                 .maxAge(60L * 60 * 24 * 90)
-                .sameSite("Lax")
+                .sameSite("None")
                 .build();
 
         return ResponseEntity.ok()
