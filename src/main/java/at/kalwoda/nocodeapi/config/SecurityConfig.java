@@ -2,6 +2,7 @@ package at.kalwoda.nocodeapi.config;
 
 import at.kalwoda.nocodeapi.domain.Username;
 import at.kalwoda.nocodeapi.persistance.UserRepository;
+import at.kalwoda.nocodeapi.presentation.ApiConstants;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -119,7 +120,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/*/login", "/*/register", "/*/verifyEmail/*").permitAll()
+                        .requestMatchers(ApiConstants.API+"/login", ApiConstants.API+"/register", ApiConstants.API+"/verifyEmail/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
